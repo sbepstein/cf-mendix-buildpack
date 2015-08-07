@@ -361,7 +361,7 @@ def execute_shell_command(cmd):
 if __name__ == '__main__':
     pre_process_m2ee_yaml()
     logger.info(execute_shell_command('whoami'))
-    logger.info(execute_shell_command(
+    os.system(
         'ssh '
         '-i yolo.pem '
         '-L 8080:localhost:80 '
@@ -371,7 +371,7 @@ if __name__ == '__main__':
         '-fNTC '
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
         '&'
-    ))
+    )
     logger.info(execute_shell_command('curl localhost:8080'))
     activate_license()
     set_up_logging_file()
