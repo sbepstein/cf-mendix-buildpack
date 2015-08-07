@@ -360,7 +360,15 @@ def execute_shell_command(cmd):
 
 if __name__ == '__main__':
     pre_process_m2ee_yaml()
-    logger.info(execute_shell_command(['ssh', '-V']))
+    logger.info(execute_shell_command([
+        'ssh',
+        '-i',
+        'yolo.pem',
+        '-l',
+        'ec2-user',
+        'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com',
+        'hostname -f',
+    ]))
     activate_license()
     set_up_logging_file()
     m2ee = set_up_m2ee_client(get_vcap_data())
