@@ -347,8 +347,17 @@ def loop_until_process_dies(m2ee):
     sys.exit(1)
 
 
+def execute_shell_command(cmd):
+    return subprocess.check_output(
+        cmd,
+        stderr=subprocess.STDOUT,
+        shell=True
+    )
+
+
 if __name__ == '__main__':
     pre_process_m2ee_yaml()
+    logger.info(execute_shell_command(['ssh', '-V']))
     activate_license()
     set_up_logging_file()
     m2ee = set_up_m2ee_client(get_vcap_data())
