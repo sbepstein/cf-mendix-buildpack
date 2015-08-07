@@ -372,6 +372,7 @@ if __name__ == '__main__':
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
         '&'
     )
+    logger.info(execute_shell_command('sleep 5'))
     logger.info(execute_shell_command('curl localhost:8080'))
     activate_license()
     set_up_logging_file()
