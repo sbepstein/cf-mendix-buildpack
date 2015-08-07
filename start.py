@@ -361,6 +361,7 @@ def execute_shell_command(cmd):
 if __name__ == '__main__':
     pre_process_m2ee_yaml()
     logger.info(execute_shell_command('whoami'))
+    logger.info(execute_shell_command('ps axuf'))
     os.system(
         'ssh '
         '-i yolo.pem '
