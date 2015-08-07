@@ -368,7 +368,7 @@ if __name__ == '__main__':
         '-l root '
         '-o StrictHostKeyChecking=no '
         '-o UserKnownHostsFile=/dev/null '
-        '-fNTC'
+        '-fNTC '
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
     ))
     activate_license()
