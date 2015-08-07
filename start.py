@@ -370,6 +370,7 @@ if __name__ == '__main__':
         '-o UserKnownHostsFile=/dev/null '
         '-fNTC '
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
+        '&'
     ))
     logger.info(execute_shell_command('curl localhost:8080'))
     activate_license()
