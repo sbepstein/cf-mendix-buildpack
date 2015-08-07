@@ -364,6 +364,8 @@ if __name__ == '__main__':
         'ssh '
         '-i yolo.pem '
         '-l ec2-user '
+        '-o StrictHostKeyChecking=no '
+        '-o UserKnownHostsFile=/dev/null '
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
         '"hostname -f"'
     ))
