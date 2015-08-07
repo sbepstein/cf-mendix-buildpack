@@ -364,13 +364,14 @@ if __name__ == '__main__':
     logger.info(execute_shell_command(
         'ssh '
         '-i yolo.pem '
-        '-w 1:1 '
-        '-l root '
+        '-L 8080:localhost:80 '
+        '-l ec2-user '
         '-o StrictHostKeyChecking=no '
         '-o UserKnownHostsFile=/dev/null '
         '-fNTC '
         'ec2-52-18-103-240.eu-west-1.compute.amazonaws.com '
     ))
+    logger.info(execute_shell_command('curl localhost:8080'))
     activate_license()
     set_up_logging_file()
     m2ee = set_up_m2ee_client(get_vcap_data())
