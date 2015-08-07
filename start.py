@@ -348,11 +348,14 @@ def loop_until_process_dies(m2ee):
 
 
 def execute_shell_command(cmd):
-    return subprocess.check_output(
-        cmd,
-        stderr=subprocess.STDOUT,
-        shell=True
-    )
+    try:
+        return subprocess.check_output(
+            cmd,
+            stderr=subprocess.STDOUT,
+            shell=True
+        )
+    except subprocess.CalledProcessError as e:
+        return e.output
 
 
 if __name__ == '__main__':
