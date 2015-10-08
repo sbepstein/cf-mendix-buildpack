@@ -24,6 +24,9 @@ m2ee:
     "-XX:MaxPermSize=128M",
     "-Djava.io.tmpdir=BUILD_PATH/data/tmp",
  ]
+ 
+ jetty: 
+   runtime_max_threads: 50
 
  allow_destroy_db: true
 
