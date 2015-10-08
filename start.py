@@ -418,7 +418,6 @@ def loop_until_process_dies(m2ee):
 
 
 if __name__ == '__main__':
-    logger.info(subprocess.check_output(["ulimit", "-a"]))
     pre_process_m2ee_yaml()
     activate_license()
     set_up_logging_file()
