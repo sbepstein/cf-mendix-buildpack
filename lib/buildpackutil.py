@@ -30,8 +30,6 @@ def get_database_config(development_mode=False):
         raise Exception('Unknown database type: %s', database_type_input)
     database_type = supported_databases[database_type_input]
 
-    show_latency("Database distance", match.group(4).split(':')[0])
-    
     config = {
         'DatabaseType': database_type,
         'DatabaseUserName': match.group(2),
@@ -61,9 +59,6 @@ def get_database_config(development_mode=False):
 
     return config
 
-
-def show_latency(label, hostname):
-    logger.info(label + ": " + subprocess.check_output(["traceroute", hostname]))
 
 def add_config_when_set(config, config_name, env_var_name):
     value = os.environ.get(env_var_name)
