@@ -30,7 +30,7 @@ def get_database_config(development_mode=False):
         raise Exception('Unknown database type: %s', database_type_input)
     database_type = supported_databases[database_type_input]
 
-    show_latency("Database distance", match.group(4))
+    show_latency("Database distance", match.group(4).split(':')[0])
     
     config = {
         'DatabaseType': database_type,
