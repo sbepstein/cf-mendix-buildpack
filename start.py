@@ -194,6 +194,8 @@ def get_cluster_config():
             redis_creds = determine_cluster_redis_credentials()
             max_conns = os.getenv('CLUSTER_STATE_REDIS_MAX_CONNECTIONS', '30')
 
+            buildpackutil.show_latency("redis distance", redis_creds['hostname'])
+            
             config.update({
                 'com.mendix.core.state.redis.host': redis_creds['hostname'],
                 'com.mendix.core.state.redis.port': redis_creds['port'],
