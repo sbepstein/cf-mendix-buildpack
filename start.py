@@ -6,6 +6,7 @@ import signal
 import subprocess
 import time
 import sys
+import shutil
 sys.path.insert(0, 'lib')
 import buildpackutil
 from m2ee import M2EE, logger
@@ -404,6 +405,39 @@ def configure_debugger(m2ee):
         )
 
 
+def mount_remote():
+#    os.chmod('readonly.key', 600)
+#    os.mkdir('.ssh')
+    shutil.copy(
+        os.path.join('readonly.key'),
+        os.path.join('/tmp', 'id_rsa'),
+    )
+    os.chmod(os.path.join('/tmp', 'id_rsa'), 0600)
+#    os.chmod(os.path.join('.ssh'), 710)
+#    os.chmod(os.path.join('.ssh', 'id_rsa'), 640)
+    subprocess.check_call([
+        'sshfs',
+        '-o',
+        'IdentityFile=/tmp/id_rsa',
+        '-o',
+        'Compression=no',
+        '-o',
+        'Ciphers=arcfour',
+        '-o',
+        'kernel_cache',
+        '-o',
+        'kernel_cache',
+        '-o',
+        'cache_timeout=3600',
+        '-o',
+        'large_read',
+        '-o',
+        'StrictHostKeyChecking=no',
+        'readonly@ec2-52-31-17-202.eu-west-1.compute.amazonaws.com:/srv',
+        'external'
+    ])
+
+
 def display_running_version(m2ee):
     if m2ee.config.get_runtime_version() >= 4.4:
         feedback = m2ee.client.about().get_feedback()
@@ -419,6 +453,7 @@ def loop_until_process_dies(m2ee):
 
 
 if __name__ == '__main__':
+    mount_remote()
     pre_process_m2ee_yaml()
     activate_license()
     set_up_logging_file()

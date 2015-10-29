@@ -1,5 +1,5 @@
 mxnode:
- mxjar_repo: BUILD_PATH/runtimes/
+ mxjar_repo: BUILD_PATH/external/runtimes/
 
 m2ee:
  app_name: My Project Name
@@ -8,7 +8,7 @@ m2ee:
  admin_listen_addresses: "127.0.0.1"
  custom_environment:
   HOME: BUILD_PATH
- javabin: BUILD_PATH/.local/bin/java
+ javabin: BUILD_PATH/external/common/bin/java
  admin_pass: eikeecahngophopeetohweesonohrahphuidaofohhaeghapoo
 
  runtime_port: RUNTIME_PORT
