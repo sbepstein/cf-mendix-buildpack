@@ -15,16 +15,36 @@ logger.setLevel(logging.INFO)
 
 logger.info('Started Mendix Cloud Foundry Buildpack')
 
+nginx_port = int(os.environ['PORT'])
+runtime_port = nginx_port + 1
+admin_port = runtime_port + 1
+
 
 def pre_process_m2ee_yaml():
-    runtime_port = int(os.environ['PORT'])
-
     subprocess.check_call([
         'sed',
         '-i',
         's|BUILD_PATH|%s|g; s|RUNTIME_PORT|%d|; s|ADMIN_PORT|%d|'
-        % (os.getcwd(), runtime_port, runtime_port + 1),
+        % (os.getcwd(), runtime_port, admin_port),
         '.local/m2ee.yaml'
+    ])
+
+
+def set_up_nginx_files():
+    subprocess.check_call([
+        'sed',
+        '-i',
+        's|ROOT|%s|g; s|PORT|%d|; s|POART|%d|'
+        % (os.getcwd(), nginx_port, runtime_port),
+        'nginx/conf/nginx.conf'
+    ])
+    subprocess.check_call(['touch', 'nginx/logs/access.log'])
+    subprocess.check_call(['touch', 'nginx/logs/error.log'])
+
+
+def start_nginx():
+    subprocess.Popen([
+        'nginx/sbin/nginx', '-p', 'nginx', '-c', 'conf/nginx.conf'
     ])
 
 
@@ -437,8 +457,10 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
+    set_up_nginx_files()
     start_app(m2ee)
     create_admin_user(m2ee)
     display_running_version(m2ee)
     configure_debugger(m2ee)
+    start_nginx()
     loop_until_process_dies(m2ee)
