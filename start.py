@@ -34,8 +34,8 @@ def set_up_nginx_files():
     subprocess.check_call([
         'sed',
         '-i',
-        's|ROOT|%s|g; s|PORT|%d|; s|POART|%d|'
-        % (os.getcwd(), nginx_port, runtime_port),
+        's|ROOT|%s|g; s|NGINX_PORT|%d|; s|RUNTIME_PORT|%d|; s|ADMIN_PORT|%d|'
+        % (os.getcwd(), nginx_port, runtime_port, admin_port),
         'nginx/conf/nginx.conf'
     ])
     subprocess.check_call(['touch', 'nginx/logs/access.log'])
@@ -45,6 +45,12 @@ def set_up_nginx_files():
 def start_nginx():
     subprocess.Popen([
         'nginx/sbin/nginx', '-p', 'nginx', '-c', 'conf/nginx.conf'
+    ])
+    subprocess.Popen([
+        'tail', '-f', 'nginx/logs/access.log'
+    ])
+    subprocess.Popen([
+        'tail', '-f', 'nginx/logs/error.log'
     ])
 
 
