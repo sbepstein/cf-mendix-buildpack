@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, 'lib')
 import buildpackutil
 from m2ee import M2EE, logger
+from nginx import get_path_config
 import logging
 
 logger.setLevel(logging.INFO)
@@ -34,10 +35,11 @@ def set_up_nginx_files():
     subprocess.check_call([
         'sed',
         '-i',
-        's|ROOT|%s|g; s|NGINX_PORT|%d|; s|RUNTIME_PORT|%d|; s|ADMIN_PORT|%d|'
-        % (os.getcwd(), nginx_port, runtime_port, admin_port),
+        's|ROOT|%s|g; s|NGINX_PORT|%d|; s|RUNTIME_PORT|%d|; s|ADMIN_PORT|%d|; s|CONFIG|%s|;'
+        % (os.getcwd(), nginx_port, runtime_port, admin_port, get_path_config()),
         'nginx/conf/nginx.conf'
     ])
+    subprocess.check_call(['cat', 'nginx/conf/nginx.conf'])
     subprocess.check_call(['touch', 'nginx/logs/access.log'])
     subprocess.check_call(['touch', 'nginx/logs/error.log'])
 
