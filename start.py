@@ -36,6 +36,8 @@ def set_up_nginx_files():
     with open('nginx/conf/nginx.conf') as fh:
         lines = ''.join(fh.readlines())
     lines = lines.replace(
+        'ROOT', os.getcwd()
+    ).replace(
         'NGINX_PORT', str(nginx_port)
     ).replace(
         'RUNTIME_PORT', str(runtime_port)
