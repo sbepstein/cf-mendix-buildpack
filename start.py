@@ -32,14 +32,17 @@ def pre_process_m2ee_yaml():
 
 
 def set_up_nginx_files():
-    subprocess.check_call([
-        'sed',
-        '-i',
-        's|ROOT|%s|g; s|NGINX_PORT|%d|; s|RUNTIME_PORT|%d|; s|ADMIN_PORT|%d|; s|CONFIG|%s|;'
-        % (os.getcwd(), nginx_port, runtime_port, admin_port, get_path_config()),
-        'nginx/conf/nginx.conf'
-    ])
-    subprocess.check_call(['cat', 'nginx/conf/nginx.conf'])
+    lines = ''
+    with open('nginx/conf/nginx.conf') as fh:
+        lines = ''.join(fh.readlines)
+    lines.replace('NGINX_PORT', str(nginx_port))
+    lines.replace('RUNTIME_PORT', str(runtime_port))
+    lines.replace('ADMIN_PORT', str(admin_port))
+    lines.replace('CONFIG', get_path_config())
+    with open('nginx/conf/nginx.conf', 'w') as fh:
+        fh.write(lines)
+
+    print lines
     subprocess.check_call(['touch', 'nginx/logs/access.log'])
     subprocess.check_call(['touch', 'nginx/logs/error.log'])
 
