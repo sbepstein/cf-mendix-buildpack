@@ -34,7 +34,7 @@ def pre_process_m2ee_yaml():
 def set_up_nginx_files():
     lines = ''
     with open('nginx/conf/nginx.conf') as fh:
-        lines = ''.join(fh.readlines)
+        lines = ''.join(fh.readlines())
     lines.replace('NGINX_PORT', str(nginx_port))
     lines.replace('RUNTIME_PORT', str(runtime_port))
     lines.replace('ADMIN_PORT', str(admin_port))
