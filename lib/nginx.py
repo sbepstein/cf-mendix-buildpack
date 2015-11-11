@@ -41,7 +41,7 @@ location /client-cert-check-internal {
         ipfilter = []
         if 'ipfilter' in config:
             for ip in config['ipfilter']:
-                ipfilter.append(ip + ';')
+                ipfilter.append('allow ' + ip + ';')
             ipfilter.append('deny all;')
         client_cert = ''
         if 'client-cert' in config:
