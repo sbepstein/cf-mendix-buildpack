@@ -43,7 +43,7 @@ location /client-cert-check-internal {
             for ip in config['ipfilter']:
                 ipfilter.append(ip + ';')
             ipfilter.append('deny all;')
-        client_cert = None
+        client_cert = ''
         if 'client-cert' in config:
             client_cert = 'auth_request /client-cert-check-internal;'
 
@@ -60,7 +60,7 @@ location %s {
         """ % (
             path,
             satisfy,
-            '\n    '.join(ipfilter),
+            '\n        '.join(ipfilter),
             client_cert,
         )
         return '\n    '.join(result.split('\n'))
