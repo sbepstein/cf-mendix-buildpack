@@ -35,10 +35,15 @@ def set_up_nginx_files():
     lines = ''
     with open('nginx/conf/nginx.conf') as fh:
         lines = ''.join(fh.readlines())
-    lines.replace('NGINX_PORT', str(nginx_port))
-    lines.replace('RUNTIME_PORT', str(runtime_port))
-    lines.replace('ADMIN_PORT', str(admin_port))
-    lines.replace('CONFIG', get_path_config())
+    lines = lines.replace(
+        'NGINX_PORT', str(nginx_port)
+    ).replace(
+        'RUNTIME_PORT', str(runtime_port)
+    ).replace(
+        'ADMIN_PORT', str(admin_port)
+    ).replace(
+        'CONFIG', get_path_config()
+    )
     with open('nginx/conf/nginx.conf', 'w') as fh:
         fh.write(lines)
 
