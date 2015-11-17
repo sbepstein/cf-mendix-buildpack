@@ -45,8 +45,14 @@ def activate_license():
   <entry key="license_key" value="{{LICENSE_KEY}}"/>
 </map>"""
 
-    license = os.environ.get('LICENSE_KEY', None)
-    server_id = os.environ.get('SERVER_ID', None)
+    license = os.environ.get(
+        'FORCED_LICENSE_KEY',
+        os.environ.get('LICENSE_KEY', None)
+    )
+    server_id = os.environ.get(
+        'FORCED_SERVER_ID',
+        os.environ.get('SERVER_ID', None)
+    )
     if license is not None and server_id is not None:
         logger.debug('A license was supplied so going to activate it')
         prefs_body = prefs_template.replace(
@@ -174,13 +180,14 @@ def get_filestore_config(m2ee):
 def determine_cluster_redis_credentials():
     vcap_services = buildpackutil.get_vcap_services_data()
     if vcap_services and 'rediscloud' in vcap_services:
-          return vcap_services['rediscloud'][0]['credentials']
+        return vcap_services['rediscloud'][0]['credentials']
     logger.error("Redis Cloud Service should be configured for this app")
     sys.exit(1)
 
 
 def is_cluster_enabled():
     return os.getenv('CLUSTER_ENABLED', 'false') == 'true'
+
 
 def get_cluster_config():
     config = {}
@@ -240,9 +247,9 @@ def set_runtime_config(metadata, mxruntime_config, vcap_data, m2ee):
         )
         app_config['DTAPMode'] = 'D'
 
-    if (m2ee.config.get_runtime_version() >= 5.15 and 
-          os.getenv('DISABLE_STICKY_SESSIONS', '').lower() != 'true' and 
-          not is_cluster_enabled()):
+    if (m2ee.config.get_runtime_version() >= 5.15 and
+            os.getenv('DISABLE_STICKY_SESSIONS', '').lower() != 'true' and
+            not is_cluster_enabled()):
         app_config['com.mendix.core.SessionIdCookieName'] = 'JSESSIONID'
 
     mxruntime_config.update(app_config)

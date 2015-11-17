@@ -131,6 +131,7 @@ NOTE: Clustering support is a BETA feature and as such not supported by Mendix f
 
 NOTE: Enabling clustering support will automatically disable sticky sessions
 
+
 Contributing
 ===
 
