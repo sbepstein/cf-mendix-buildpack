@@ -247,6 +247,8 @@ def set_runtime_config(metadata, mxruntime_config, vcap_data, m2ee):
         )
         app_config['DTAPMode'] = 'D'
 
+    logger.info("Runtime version: %s" % m2ee.config.get_runtime_version())
+    logger.info("Cluster enabled: %s" % is_cluster_enabled())
     if (m2ee.config.get_runtime_version() >= 5.15 and
             os.getenv('DISABLE_STICKY_SESSIONS', '').lower() != 'true' and
             not is_cluster_enabled()):
