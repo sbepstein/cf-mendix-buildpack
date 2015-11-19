@@ -201,7 +201,7 @@ class M2EE():
                 m2eeresponse = None
                 if log_subscriber["name"] != "*":
                     m2eeresponse = self.client.create_log_subscriber(log_subscriber)
-                if log_subscriber["nodes"] is not None:
+                if "nodes" in log_subscriber:
                     m2eeresponse = self.set_log_levels(log_subscriber["name"],
                                                        log_subscriber["nodes"],
                                                        force=True)
