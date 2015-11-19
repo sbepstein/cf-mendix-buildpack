@@ -43,10 +43,6 @@ logging:
    filename: BUILD_PATH/log/out.log
    max_size: 2097152
    max_rotation: 10
- -
-   type: console
-   name: ConsoleSubscriber
-   autosubscribe: INFO
    
 mxruntime:
  ApplicationRootUrl: https://APP_URI/
