@@ -198,8 +198,14 @@ class M2EE():
                         "you want.")
         else:
             for log_subscriber in logging_config:
-                m2eeresponse = self.client.create_log_subscriber(
-                    log_subscriber)
+                m2eeresponse = None
+                if log_subscriber["name"] != "*":
+                    m2eeresponse = self.client.create_log_subscriber(log_subscriber)
+                if log_subscriber["nodes"] is not None:
+                    m2eeresponse = self.set_log_levels(log_subscriber["name"],
+                                                       log_subscriber["nodes"],
+                                                       force=True)
+
                 result = m2eeresponse.get_result()
                 if result == 3:  # logsubscriber name exists
                     pass
@@ -286,6 +292,13 @@ class M2EE():
 
     def set_log_level(self, subscriber, node, level):
         params = {"subscriber": subscriber, "node": node, "level": level}
+        return self.client.set_log_level(params)
+
+    def set_log_levels(self, subscriber, nodes, force=False):
+        params = {"subscriber": subscriber, "nodes": nodes}
+        if force:
+            params["force"] = "true"
+
         return self.client.set_log_level(params)
 
     def get_log_levels(self):
