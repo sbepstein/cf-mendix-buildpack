@@ -465,6 +465,12 @@ def loop_until_process_dies(m2ee):
     logger.info('process died, stopping')
     sys.exit(1)
 
+def loop_forever():
+    while True:
+        time.sleep(10)
+    logger.info('process died, stopping')
+    sys.exit(1)
+
 def start_berlin():
     subprocess.Popen([
         './berlin',
@@ -489,4 +495,5 @@ if __name__ == '__main__':
     #display_running_version(m2ee)
     #configure_debugger(m2ee)
     start_nginx()
-    loop_until_process_dies(m2ee)
+    loop_forever()
+    #loop_until_process_dies(m2ee)
