@@ -353,12 +353,15 @@ def set_up_m2ee_client(vcap_data):
 
 
 def set_up_logging_file():
-    os.mkfifo('log/out.log')
+    logfile = 'log/out.log'
+    if os.path.exists(logfile):
+        os.remove(logfile)
+    os.mkfifo(logfile)
     subprocess.Popen([
         'sed',
         '--unbuffered',
         's|^[0-9\-]\+\s[0-9:\.]\+\s||',
-        'log/out.log',
+        logfile,
     ])
 
 
