@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     def sigterm_handler(_signo, _stack_frame):
         m2ee.stop()
-        loop_until_process_dies(m2ee, 0)
+        loop_until_process_dies(m2ee, 1)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
