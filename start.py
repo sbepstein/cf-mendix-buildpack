@@ -19,6 +19,7 @@ logger.info('Started Mendix Cloud Foundry Buildpack')
 nginx_port = int(os.environ['PORT'])
 runtime_port = nginx_port + 1
 admin_port = runtime_port + 1
+berlin_port = 8000
 
 
 def pre_process_m2ee_yaml():
@@ -43,6 +44,8 @@ def set_up_nginx_files():
         'RUNTIME_PORT', str(runtime_port)
     ).replace(
         'ADMIN_PORT', str(admin_port)
+    ).replace(
+        'BERLIN_PORT', str(berlin_port)
     ).replace(
         'CONFIG', get_path_config()
     )
@@ -462,23 +465,28 @@ def loop_until_process_dies(m2ee):
     logger.info('process died, stopping')
     sys.exit(1)
 
+def start_berlin():
+    subprocess.Popen([
+        './berlin',
+    ])
+
 
 if __name__ == '__main__':
-    pre_process_m2ee_yaml()
-    activate_license()
-    set_up_logging_file()
-    m2ee = set_up_m2ee_client(get_vcap_data())
+    #pre_process_m2ee_yaml()
+    #activate_license()
+    #set_up_logging_file()
+    #m2ee = set_up_m2ee_client(get_vcap_data())
 
     def sigterm_handler(_signo, _stack_frame):
-        m2ee.stop()
+        #m2ee.stop()
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     set_up_nginx_files()
-    start_app(m2ee)
-    create_admin_user(m2ee)
-    display_running_version(m2ee)
-    configure_debugger(m2ee)
+    #start_app(m2ee)
+    #create_admin_user(m2ee)
+    #display_running_version(m2ee)
+    #configure_debugger(m2ee)
     start_nginx()
     loop_until_process_dies(m2ee)
