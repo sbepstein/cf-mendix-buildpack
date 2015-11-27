@@ -19,7 +19,7 @@ logger.info('Started Mendix Cloud Foundry Buildpack')
 nginx_port = int(os.environ['PORT'])
 runtime_port = nginx_port + 1
 admin_port = runtime_port + 1
-berlin_port = 8080
+berlin_port = 9000
 
 
 def pre_process_m2ee_yaml():
