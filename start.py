@@ -495,5 +495,6 @@ if __name__ == '__main__':
     #display_running_version(m2ee)
     #configure_debugger(m2ee)
     start_nginx()
+    start_berlin()
     loop_forever()
     #loop_until_process_dies(m2ee)
