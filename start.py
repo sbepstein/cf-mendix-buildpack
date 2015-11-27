@@ -462,9 +462,9 @@ def display_running_version(m2ee):
             logger.info('Model version: %s' % feedback['model_version'])
 
 
-def loop_until_process_dies(m2ee):
+def loop_until_process_dies(m2ee, interval=10):
     while m2ee.runner.check_pid():
-        time.sleep(10)
+        time.sleep(interval)
     logger.info('process died, stopping')
     sys.exit(1)
 
