@@ -223,6 +223,10 @@ def copy_buildpack_resources():
         os.path.join(BUILD_DIR, 'start.py'),
     )
     shutil.copy(
+        os.path.join(BUILDPACK_DIR, 'start2.py'),
+        os.path.join(BUILD_DIR, 'start2.py'),
+    )
+    shutil.copy(
         os.path.join(BUILDPACK_DIR, 'berlin'),
         os.path.join(BUILD_DIR, 'berlin'),
     )

@@ -19,7 +19,7 @@ logger.info('Started Mendix Cloud Foundry Buildpack')
 nginx_port = int(os.environ['PORT'])
 runtime_port = nginx_port + 1
 admin_port = runtime_port + 1
-berlin_port = 9000
+berlin_port = admin_port + 1
 
 
 def pre_process_m2ee_yaml():
@@ -473,7 +473,7 @@ def loop_forever():
 
 def start_berlin():
     subprocess.Popen([
-        './berlin',
+        './berlin', "python start2.py", "localhost:%d" % berlin_port
     ])
 
 
