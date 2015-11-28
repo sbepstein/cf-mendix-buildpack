@@ -45,7 +45,7 @@ def set_up_nginx_files():
     ).replace(
         'ADMIN_PORT', str(admin_port)
     ).replace(
-        'BERLIN_PORT', str(fastpush_port)
+        'FASTPUSH_PORT', str(fastpush_port)
     ).replace(
         'CONFIG', get_path_config()
     )
