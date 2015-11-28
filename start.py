@@ -19,7 +19,7 @@ logger.info('Started Mendix Cloud Foundry Buildpack')
 nginx_port = int(os.environ['PORT'])
 runtime_port = nginx_port + 1
 admin_port = runtime_port + 1
-berlin_port = admin_port + 1
+fastpush_port = admin_port + 1
 
 
 def pre_process_m2ee_yaml():
@@ -45,7 +45,7 @@ def set_up_nginx_files():
     ).replace(
         'ADMIN_PORT', str(admin_port)
     ).replace(
-        'BERLIN_PORT', str(berlin_port)
+        'BERLIN_PORT', str(fastpush_port)
     ).replace(
         'CONFIG', get_path_config()
     )
@@ -474,9 +474,9 @@ def loop_forever():
     logger.info('process died, stopping')
     sys.exit(1)
 
-def start_berlin():
+def start_fastpush_controller():
     subprocess.Popen([
-        './berlin', "python start2.py", "localhost:%d" % berlin_port
+        './cf-fastpush-controller', "python start2.py", "localhost:%d" % fastpush_port
     ])
 
 
@@ -497,7 +497,7 @@ if __name__ == '__main__':
     #create_admin_user(m2ee)
     #display_running_version(m2ee)
     #configure_debugger(m2ee)
+    start_fastpush_controller()
     start_nginx()
-    start_berlin()
     loop_forever()
     #loop_until_process_dies(m2ee)
