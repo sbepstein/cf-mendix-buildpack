@@ -502,5 +502,6 @@ if __name__ == '__main__':
     #configure_debugger(m2ee)
     start_fastpush_controller()
     start_nginx()
+    print os.listdir("./")
     loop_forever()
     #loop_until_process_dies(m2ee)
