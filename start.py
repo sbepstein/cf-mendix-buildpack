@@ -475,6 +475,8 @@ def loop_forever():
     sys.exit(1)
 
 def start_fastpush_controller():
+    os.environ["FASTPUSH_APP_DIRS"] = "./web ./model"
+    os.environ["FASTPUSH_RESTART_REGEX"] = r'^.*\.(jar|mdp)$'
     subprocess.Popen([
         './cf-fastpush-controller', "python start2.py", "localhost:%d" % fastpush_port
     ],
