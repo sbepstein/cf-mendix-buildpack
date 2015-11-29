@@ -477,7 +477,10 @@ def loop_forever():
 def start_fastpush_controller():
     subprocess.Popen([
         './cf-fastpush-controller', "python start2.py", "localhost:%d" % fastpush_port
-    ])
+    ],
+    stdout=sys.stdout,
+    stderr=sys.stderr
+    )
 
 
 if __name__ == '__main__':
