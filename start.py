@@ -226,7 +226,7 @@ def get_cluster_config():
 
 
 def get_custom_settings(metadata, existing_config):
-    custom_settings_key = 'Configuration'
+    custom_settings_key = 'ConfigurationXXXX'
     if custom_settings_key in metadata:
         config = {}
         for k, v in metadata[custom_settings_key].iteritems():
