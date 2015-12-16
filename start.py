@@ -144,7 +144,7 @@ def get_filestore_config(m2ee):
         secret = _conf['secret_access_key']
         pattern = r'https://(([^:]+):([^@]+)@)?([^/]+)/(.*)'
         match = re.search(pattern, _conf['uri'])
-        endpoint = 'http://' + match.group(4)
+        endpoint = 'https://' + match.group(4)
         bucket = match.group(5)
         v2_auth = 'true'
 
