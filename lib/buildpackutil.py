@@ -15,7 +15,7 @@ def get_database_config(development_mode=False):
     else:
         url = os.environ['DATABASE_URL']
 
-    pattern = r'([a-zA-Z]+)://([^:]+):([^@]+)@([^/]+)/(.*)(\?reconnect=true)?'
+    pattern = r'([a-zA-Z]+)://([^:]+):([^@]+)@([^/]+)/(.*)(\?.*)?'
     match = re.search(pattern, url)
     supported_databases = {
         'postgres':  'PostgreSQL',
