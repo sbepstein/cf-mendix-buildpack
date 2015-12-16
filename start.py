@@ -189,6 +189,9 @@ def get_filestore_config(m2ee):
         config['com.mendix.storage.s3.EncryptionKeys'] = encryption_keys
     if m2ee.config.get_runtime_version() >= 6 and sse:
         config['com.mendix.storage.s3.UseSSE'] = sse
+    for k, v in config.iteritems():
+        if k.startswith('com.mendix'):
+            print k, v
     return config
 
 
