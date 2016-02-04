@@ -384,6 +384,10 @@ def set_up_m2ee_client(vcap_data):
     activate_new_relic(m2ee, vcap_data['application_name'])
     activate_appdynamics(m2ee, vcap_data['application_name'])
     set_application_name(m2ee, vcap_data['application_name'])
+    felix = os.path.join(os.getcwd(), 'runtimes/6.2.0/runtime/felixconfig.properties.template')
+    subprocess.call(['sed', '-i', "/sun.nio.cs/d", felix])
+    subprocess.call("echo 'sun.nio.cs,\' >> " + felix, shell=True)
+    subprocess.call("echo 'com.singularity' >> " + felix, shell=True)
 
     return m2ee
 
