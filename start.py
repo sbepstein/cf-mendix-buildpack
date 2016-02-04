@@ -388,6 +388,7 @@ def set_up_m2ee_client(vcap_data):
     subprocess.call(['sed', '-i', "/sun.nio.cs/d", felix])
     subprocess.call("echo 'sun.nio.cs,\' >> " + felix, shell=True)
     subprocess.call("echo 'com.singularity' >> " + felix, shell=True)
+    subprocess.call(["cat", felix])
 
     return m2ee
 
