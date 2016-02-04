@@ -12,7 +12,7 @@ import buildpackutil
 from m2ee import M2EE, logger
 import logging
 
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 logger.info('Started Mendix Cloud Foundry Buildpack')
 
