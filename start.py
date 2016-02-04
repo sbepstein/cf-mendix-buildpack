@@ -386,7 +386,7 @@ def set_up_m2ee_client(vcap_data):
     set_application_name(m2ee, vcap_data['application_name'])
     felix = os.path.join(os.getcwd(), 'runtimes/6.2.0/runtime/felixconfig.properties.template')
     subprocess.call(['sed', '-i', "/sun.nio.cs/d", felix])
-    subprocess.call("echo '\tsun.nio.cs,\' >> " + felix, shell=True)
+    subprocess.call("echo '\tsun.nio.cs,\\' >> " + felix, shell=True)
     subprocess.call("echo '\tcom.singularity' >> " + felix, shell=True)
     subprocess.call(["cat", felix])
 
