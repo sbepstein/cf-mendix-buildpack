@@ -8,7 +8,7 @@ import subprocess
 import errno
 
 BUILD_DIR = sys.argv[1]
-CACHE_DIR = os.path.join(sys.argv[2], 'bust')
+CACHE_DIR = os.path.join(sys.argv[2], 'bustme')
 DOT_LOCAL_LOCATION = os.path.join(BUILD_DIR, '.local')
 BUILDPACK_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -363,6 +363,11 @@ def run_mx_build():
     if get_runtime_version() >= 6.4 or os.environ.get('FORCE_WRITE_BUILD_ERRORS'):
         args.append('--write-errors=%s' % build_errors_json)
         logging.debug('Will write build errors to %s' % build_errors_json)
+    incremental_build = False
+    if get_runtime_version() >= 6.5 or os.environ.get('FORCE_INCREMENTAL_BUILD'):
+        args.append('--incremental')
+        logging.debug('Will write build incrementally')
+        incremental_build = True
 
     if os.environ.get('FORCED_MXBUILD_URL'):
         args.append('--loose-version-check')
@@ -370,11 +375,22 @@ def run_mx_build():
             'Using forced mxbuild version, the model will be converted'
         )
     args.append(get_mpr_file())
+
+    if incremental_build:
+        deployment_build_dir = os.path.join(BUILD_DIR, 'deployment/')
+        deployment_cache_dir = os.path.join(CACHE_DIR, 'deployment/')
+        buildpackutil.mkdir_p(deployment_cache_dir)
+        buildpackutil.mkdir_p(deployment_build_dir)
+        restore_cached_build(deployment_build_dir, deployment_cache_dir)
+
     try:
         subprocess.check_call(args, env=env)
     except subprocess.CalledProcessError as e:
         buildstatus_callback(build_errors_json)
         raise e
+
+    if incremental_build:
+        cache_build(deployment_build_dir, deployment_cache_dir)
 
     for dir_name in ['web', 'model']:
         path = os.rename(
@@ -388,6 +404,39 @@ def run_mx_build():
                 shutil.rmtree(path)
             else:
                 os.unlink(path)
+
+
+def restore_cached_build(deployment_build_dir, deployment_cache_dir):
+    try:
+        if os.path.isdir(deployment_cache_dir):
+            subprocess.check_call([
+                'rsync',
+                '--delete',
+                '-a',
+                deployment_cache_dir,
+                deployment_build_dir,
+            ])
+            logging.info('Restored cached build from: ' + deployment_cache_dir)
+        else:
+            logging.info('No previous build to restore')
+    except subprocess.CalledProcessError as e:
+        logging.warn('Failed to restore cached build')
+        logging.warn(e)
+
+
+def cache_build(deployment_build_dir, deployment_cache_dir):
+    try:
+        subprocess.check_call([
+            'rsync',
+            '--delete',
+            '-a',
+            deployment_build_dir,
+            deployment_cache_dir,
+        ])
+        logging.info('Cached build in: ' + deployment_cache_dir)
+    except subprocess.CalledProcessError as e:
+        logging.warn('Failed to cache build')
+        logging.warn(e)
 
 
 def buildstatus_callback(error_file):
