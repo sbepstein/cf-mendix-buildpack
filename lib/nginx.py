@@ -76,6 +76,10 @@ def get_path_config():
 
         result += """
 location %s {
+    if ($http_x_forwarded_proto != "https") {
+        return 302 https://$host$request_uri;
+    }
+
     if ($request_uri ~ ^/(.*\.(css|js)|forms/.*|img/.*|pages/.*)\?[0-9]+$) {
         expires 1y;
     }
