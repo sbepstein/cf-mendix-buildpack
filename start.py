@@ -62,6 +62,9 @@ def set_up_nginx_files():
     gen_htpasswd({'MxAdmin': os.environ.get('ADMIN_PASSWORD')})
 
     buildpackutil.mkdir_p('nginx/logs')
+    buildpackutil.mkdir_p('model-access')
+    subprocess.check_call(['ln', '-s', '../model', 'model-access/model'])
+    subprocess.check_call(['ln', '-s', '../web', 'model-access/web'])
     subprocess.check_call(['touch', 'nginx/logs/access.log'])
     subprocess.check_call(['touch', 'nginx/logs/error.log'])
 
@@ -681,7 +684,15 @@ def display_running_version(m2ee):
 
 def loop_until_process_dies(m2ee):
     while m2ee.runner.check_pid():
-        time.sleep(10)
+        if os.path.isfile('model-access/restart'):
+            logger.info('Going to restart app triggered via model-access')
+            if not m2ee.stop():
+                m2ee.terminate()
+            start_app(m2ee)
+            os.unlink('model-access/restart')
+        else:
+            time.sleep(10)
+
     logger.info('process died, stopping')
     sys.exit(1)
 
