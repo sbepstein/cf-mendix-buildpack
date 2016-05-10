@@ -76,7 +76,7 @@ def get_path_config():
 
         result += """
 location %s {
-    if ($request_uri ~ ^/(.*\.(css|js)|forms/.*|img/.*|pages/.*)\?[0-9]+$) {
+    if ($request_uri ~ ^/(.*\.(css|js)|forms/.*|img/.*)\?[0-9]+$) {
         expires 1y;
     }
     proxy_pass http://mendix;
