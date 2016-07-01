@@ -209,12 +209,25 @@ def start_mxbuild_server():
         ),
         os.path.join('mono', 'etc', 'mono', 'config'),
     ])
+    java_locations = [
+        '/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
+        '/tmp/javasdk/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
+    ]
+    java_location = None
+    for possible_java_location in java_locations:
+        if os.path.isdir(possible_java_location):
+            java_location = possible_java_location
+    if java_location is None:
+        raise Exception('Java not found!')
     subprocess.Popen([
         'mono/bin/mono',
         '--config', 'mono/etc/mono/config',
         'mxbuild/%s/modeler/mxbuild.exe' % runtime_version,
         '--serve',
-        '--port=6666'], env=env)
+        '--port=6666',
+        '--java-home=%s' % java_location,
+        '--java-exe-path=%s/bin/java' % java_location,
+    ], env=env)
 
 
 def do_run(port, restart_callback):
