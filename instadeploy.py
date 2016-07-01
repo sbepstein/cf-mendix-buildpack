@@ -127,9 +127,14 @@ def ensure_mono():
         subprocess.call(('rm', ROOT_DIR + 'mono.tar.gz'))
 
 
-def runmxbuild(project_dir, runtime_version):
+def run_mxbuild(project_dir, runtime_version):
     before = time.time()
-    body = {'args': ['--target=pages', '--loose-version-check', get_mpr_file(project_dir)]}
+    body = {
+        'target': 'Deploy',
+        'projectFilePath': get_mpr_file(project_dir),
+        'useLooseVersionCheck': True,
+        'forceFullDeployment': False
+    }
     headers = {
         'Content-Type': 'application/json',
     }
@@ -141,7 +146,7 @@ def runmxbuild(project_dir, runtime_version):
         headers=headers,
     )
     response = urllib2.urlopen(req, timeout=10)
-    if (response.getcode() != 200):
+    if response.getcode() != 200:
         raise Exception('http error' + str(response.getcode()))
     print 'MxBuild compilation succeeded'
     print 'MxBuild took', time.time() - before, 'seconds'
@@ -152,7 +157,7 @@ def build(mpk_file, ticker):
     subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', project_dir))
     print 'unzip', ticker.next()
     print 'runtime_version', ticker.next()
-    response = runmxbuild(project_dir, runtime_version)
+    response = run_mxbuild(project_dir, runtime_version)
     print 'mxbuild', ticker.next()
     apply_changes()
     print 'apply new changes', ticker.next()
