@@ -4,7 +4,7 @@ import json
 import subprocess
 import time
 import os
-import sys
+from m2ee import logger
 import urllib2
 import traceback
 from base64 import b64encode
@@ -53,10 +53,14 @@ class StoreHandler(BaseHTTPRequestHandler):
                 data = form['file'].file.read()
                 open(mpk_file, "wb").write(data)
                 mxbuild_response = build(mpk_file, ticker())
-                if 'reload' in mxbuild_response: # todo
-                    reload_model()
-                else:
+                if 'restartRequired' in str(mxbuild_response):
+                    logger.info(str(mxbuild_response))
+                    logger.info("Restarting app")
                     self.server.mxbuild_restart_callback()
+                else:
+                    logger.info(str(mxbuild_response))
+                    logger.info("Reloading model")
+                    reload_model()
                 return self._terminate(200, {'state': 'STARTED'}, mxbuild_response)
             else:
                 return self._terminate(401, {'state': 'FAILED', 'errordetails': 'No MPK found'})

@@ -21,14 +21,15 @@ logger.info('Started Mendix Cloud Foundry Buildpack')
 
 class InstaDeployThread(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, restart_callback):
         threading.Thread.__init__(self)
         self.keep_running = True
         self.daemon = True
+        self.restart_callback = restart_callback
 
     def run(self):
         while self.keep_running:
-            instadeploy.do_run(str(get_deploy_port()))
+            instadeploy.do_run(str(get_deploy_port()), restart_callback)
 
     def stop(self):
         self.keep_running = False
@@ -723,10 +724,10 @@ def am_i_primary_instance():
     return os.getenv('CF_INSTANCE_INDEX', '0') == '0'
 
 
-def start_mxbuild_service():
+def start_mxbuild_service(restart_callback):
     if os.getenv('DEPLOY_PASSWORD') is not None:
         logger.info('MxBuild service is enabled')
-        t = InstaDeployThread()
+        t = InstaDeployThread(restart_callback)
         t.start()
 
 
@@ -756,5 +757,9 @@ if __name__ == '__main__':
     display_running_version(m2ee)
     configure_debugger(m2ee)
     start_nginx()
-    start_mxbuild_service()
+    def restart_callback():
+        if not m2ee.stop():
+            m2ee.terminate()
+        start_app(m2ee)
+    start_mxbuild_service(restart_callback)
     loop_until_process_dies(m2ee)
