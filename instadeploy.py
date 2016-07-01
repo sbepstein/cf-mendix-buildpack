@@ -5,9 +5,7 @@ import subprocess
 import time
 import os
 import sys
-import sqlite3
 import urllib2
-import urllib
 import traceback
 from base64 import b64encode
 from start import get_admin_port
@@ -39,7 +37,9 @@ def detect_runtime_version():
 
 runtime_version = detect_runtime_version()
 
+
 class StoreHandler(BaseHTTPRequestHandler):
+
     def do_POST(self):
         try:
             form = cgi.FieldStorage(
@@ -53,6 +53,10 @@ class StoreHandler(BaseHTTPRequestHandler):
                 data = form['file'].file.read()
                 open(mpk_file, "wb").write(data)
                 mxbuild_response = build(mpk_file, ticker())
+                if 'reload' in mxbuild_response: # todo
+                    reload_model()
+                else:
+                    self.server.mxbuild_restart_callback()
                 return self._terminate(200, {'state': 'STARTED'}, mxbuild_response)
             else:
                 return self._terminate(401, {'state': 'FAILED', 'errordetails': 'No MPK found'})
@@ -148,8 +152,6 @@ def build(mpk_file, ticker):
     print 'mxbuild', ticker.next()
     apply_changes()
     print 'apply new changes', ticker.next()
-    reload_model()
-    print 'reload model', ticker.next()
     return response
 
 
@@ -171,7 +173,7 @@ def reload_model():
     response = urllib2.urlopen(req, timeout=5)
     response_headers = response.info()
     parsed_response = json.load(response)
-    if (response.getcode() != 200):
+    if response.getcode() != 200:
         raise Exception('http error' + str(response.getcode()))
     print 'RELOADED MODEL GREAT SUCCESS!!'
 
@@ -182,6 +184,7 @@ def ticker():
         last = time.time()
         yield last - prev
         prev = last
+
 
 def start_mxbuild_server():
     env = dict(os.environ)
@@ -210,14 +213,11 @@ def start_mxbuild_server():
         '--port=6666'], env=env)
 
 
-if __name__ == '__main__':
+def do_run(port, restart_callback):
     ensure_mono()
     ensure_mxbuild_version(runtime_version)
-    if len(sys.argv) >= 1:
-        port = int(sys.argv[1])
-    else:
-        port = 8080
     print('Going to listen on port ', port)
     server = HTTPServer(('', port), StoreHandler)
+    server.mxbuild_restart_callback = restart_callback
     start_mxbuild_server()
     server.serve_forever()

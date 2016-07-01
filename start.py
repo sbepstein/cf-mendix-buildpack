@@ -7,16 +7,31 @@ import subprocess
 import time
 import sys
 import base64
+import threading
 sys.path.insert(0, 'lib')
 import requests
 import buildpackutil
 from m2ee import M2EE, logger
 from nginx import get_path_config, gen_htpasswd
+import instadeploy
 
 logger.setLevel(buildpackutil.get_buildpack_loglevel())
 
 logger.info('Started Mendix Cloud Foundry Buildpack')
 
+class InstaDeployThread(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.keep_running = True
+        self.daemon = True
+
+    def run(self):
+        while self.keep_running:
+            instadeploy.do_run(str(get_deploy_port()))
+
+    def stop(self):
+        self.keep_running = False
 
 def get_nginx_port():
     return int(os.environ['PORT'])
@@ -711,7 +726,8 @@ def am_i_primary_instance():
 def start_mxbuild_service():
     if os.getenv('DEPLOY_PASSWORD') is not None:
         logger.info('MxBuild service is enabled')
-        subprocess.Popen(['python', 'instadeploy.py', str(get_deploy_port())])
+        t = InstaDeployThread()
+        t.start()
 
 
 if __name__ == '__main__':
