@@ -29,7 +29,7 @@ class InstaDeployThread(threading.Thread):
 
     def run(self):
         while self.keep_running:
-            instadeploy.do_run(str(get_deploy_port()), restart_callback)
+            instadeploy.do_run(get_deploy_port(), restart_callback)
 
     def stop(self):
         self.keep_running = False
