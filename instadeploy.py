@@ -131,7 +131,9 @@ def run_mxbuild(project_dir, runtime_version):
     before = time.time()
     body = {
         'target': 'Deploy',
-        'projectFilePath': get_mpr_file(project_dir),
+        'projectFilePath': os.path.join(
+            os.getcwd(), get_mpr_file(project_dir)
+        ),
         'useLooseVersionCheck': True,
         'forceFullDeployment': False
     }
