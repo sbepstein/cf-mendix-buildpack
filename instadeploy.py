@@ -109,7 +109,6 @@ def copy_build_output_to_disk():
             os.path.join(deployment_dir, name) + '/',
             os.path.join(ROOT_DIR, name) + '/',
         ))
-        subprocess.call(('rm', '-rf', os.path.join(deployment_dir, name)))
 
 
 def ensure_mono():
