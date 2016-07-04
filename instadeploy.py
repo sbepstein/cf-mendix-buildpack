@@ -247,7 +247,7 @@ def start_mxbuild_server():
             java_location = possible_java_location
     if java_location is None:
         raise Exception('Java not found!')
-    subprocess.Popen([
+    opts = [
         'mono/bin/mono',
         '--config', 'mono/etc/mono/config',
         'mxbuild/%s/modeler/mxbuild.exe' % runtime_version,
@@ -255,7 +255,10 @@ def start_mxbuild_server():
         '--port=6666',
         '--java-home=%s' % java_location,
         '--java-exe-path=%s/bin/java' % java_location,
-    ], env=env)
+    ]
+    for opt in opts:
+        print opt
+    subprocess.Popen(opts, env=env)
 
 
 def do_run(port, restart_callback):
