@@ -105,7 +105,7 @@ def ensure_mxbuild_version(version):
 def copy_build_output_to_disk():
     for name in ('web', 'model'):
         subprocess.call((
-            'rsync', '-a', '-c',
+            'rsync', '-a', '-c', '-v',
             os.path.join(deployment_dir, name) + '/',
             os.path.join(ROOT_DIR, name) + '/',
         ))
