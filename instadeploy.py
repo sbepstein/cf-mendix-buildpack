@@ -166,8 +166,16 @@ def run_mxbuild(project_dir, runtime_version):
 
 def build(mpk_file, ticker):
     subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', tmp_project_dir))
+    print 'rsync exclude java'
     subprocess.call((
-        'rsync', '-r', '-c', '-v',
+        'rsync', '--recursive', '--checksum', '-v',
+        '--exclude', 'javasource',
+        tmp_project_dir + '/',
+        project_dir + '/',
+    ))
+    print 'rsync --ignore-existing'
+    subprocess.call((
+        'rsync', '--recursive', '--ignore-existing', '-v',
         tmp_project_dir + '/',
         project_dir + '/',
     ))
