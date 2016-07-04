@@ -15,9 +15,10 @@ MXBUILD_FOLDER = ROOT_DIR + 'mxbuild/'
 
 
 project_dir = '.local/project'
+tmp_project_dir = '.local/tmp_project'
 deployment_dir = os.path.join(project_dir, 'deployment')
 
-for dir in (MXBUILD_FOLDER, project_dir, deployment_dir):
+for dir in (MXBUILD_FOLDER, project_dir, tmp_project_dir, deployment_dir):
     subprocess.call(('mkdir', '-p', dir))
 mpk_file = os.path.join(project_dir, 'app.mpk')
 
@@ -105,7 +106,7 @@ def ensure_mxbuild_version(version):
 def copy_build_output_to_disk():
     for name in ('web', 'model'):
         subprocess.call((
-            'rsync', '-a', '-c', '-v',
+            'rsync', '-a',
             os.path.join(deployment_dir, name) + '/',
             os.path.join(ROOT_DIR, name) + '/',
         ))
@@ -165,7 +166,12 @@ def run_mxbuild(project_dir, runtime_version):
 
 
 def build(mpk_file, ticker):
-    subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', project_dir))
+    subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', tmp_project_dir))
+    subprocess.call((
+        'rsync', '-a', '-c', '-v',
+        tmp_project_dir + '/',
+        project_dir + '/',
+    ))
     print 'unzip', ticker.next()
     response = run_mxbuild(project_dir, runtime_version)
     print 'mxbuild', ticker.next()
