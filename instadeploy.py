@@ -2,45 +2,66 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
 import json
 import subprocess
-import time
 import os
+import buildpackutil
+import mxbuild
 from m2ee import logger
-import urllib2
 import traceback
-from base64 import b64encode
-from start import get_admin_port
+import threading
+import sys
+sys.path.insert(0, 'lib')
+import requests
 
 ROOT_DIR = os.getcwd() + '/'
 MXBUILD_FOLDER = ROOT_DIR + 'mxbuild/'
 
 
-project_dir = '.local/project'
-tmp_project_dir = '.local/tmp_project'
-tmp2_project_dir = '.local/tmp_project_2'
-deployment_dir = os.path.join(project_dir, 'deployment')
+PROJECT_DIR = '.local/project'
+DEPLOYMENT_DIR = os.path.join(PROJECT_DIR, 'deployment')
+TMP_PROJECT_DIR = '.local/tmp_project'
+TMP2_PROJECT_DIR = '.local/tmp_project_2'
 
-for dir in (MXBUILD_FOLDER, project_dir, tmp_project_dir, deployment_dir, tmp2_project_dir):
-    subprocess.call(('mkdir', '-p', dir))
-mpk_file = os.path.join(project_dir, 'app.mpk')
+for directory in (
+    MXBUILD_FOLDER,
+    PROJECT_DIR,
+    TMP_PROJECT_DIR,
+    DEPLOYMENT_DIR,
+    TMP2_PROJECT_DIR
+):
+    buildpackutil.mkdir_p(directory)
 
 
-def get_mpr_file(project_dir):
-    for filename in os.listdir(project_dir):
+# TODO HARDCODED CRUFT
+MPK_FILE = os.path.join(PROJECT_DIR, 'app.mpk')
+
+
+class InstaDeployThread(threading.Thread):
+
+    def __init__(self, port, restart_callback, reload_callback):
+        super(InstaDeployThread, self).__init__()
+        self.daemon = True
+        self.port = port
+        self.restart_callback = restart_callback
+        self.reload_callback = reload_callback
+
+    def run(self):
+        do_run(self.port, self.restart_callback, self.reload_callback)
+
+
+def get_mpr_file(PROJECT_DIR):
+    for filename in os.listdir(PROJECT_DIR):
         if filename.endswith('.mpr'):
-            return os.path.join(project_dir, filename)
+            return os.path.join(PROJECT_DIR, filename)
     raise Exception('could not get runtime_version')
 
 
 def detect_runtime_version():
-    with open("model/metadata.json") as f:
+    with open('model/metadata.json') as f:
         metadata = json.load(f)
     return metadata['RuntimeVersion']
 
 
-runtime_version = detect_runtime_version()
-
-
-class StoreHandler(BaseHTTPRequestHandler):
+class MPKUploadHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
@@ -53,26 +74,31 @@ class StoreHandler(BaseHTTPRequestHandler):
                 })
             if 'file' in form:
                 data = form['file'].file.read()
-                open(mpk_file, "wb").write(data)
-                mxbuild_response = build(mpk_file, ticker())
+                open(MPK_FILE, 'wb').write(data)
+                mxbuild_response = build()
                 if 'restartRequired' in str(mxbuild_response):
                     logger.info(str(mxbuild_response))
-                    logger.info("Restarting app, skipping for now")
+                    logger.info('Restarting app, reloading for now')
 #                    self.server.mxbuild_restart_callback()
+                    self.server.mxbuild_reload_callback()
                 else:
                     logger.info(str(mxbuild_response))
-                    logger.info("Reloading model")
-                    reload_model()
-                return self._terminate(200, {'state': 'STARTED'}, mxbuild_response)
+                    logger.info('Reloading model')
+                    self.server.mxbuild_reload_callback()
+                return self._terminate(200, {
+                    'state': 'STARTED',
+                }, mxbuild_response)
             else:
-                return self._terminate(401, {'state': 'FAILED', 'errordetails': 'No MPK found'})
+                return self._terminate(401, {
+                    'state': 'FAILED',
+                    'errordetails': 'No MPK found',
+                })
         except Exception as e:
             details = traceback.format_exc()
             return self._terminate(500, {'state': 'FAILED', 'errordetails': details})
 
     def _terminate(self, status_code, data, mxbuild_response=None):
         if mxbuild_response:
-            mxbuild_json = json.loads(mxbuild_response)
             data['buildstatus'] = json.dumps(mxbuild_json['problems'])
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
@@ -108,7 +134,7 @@ def copy_build_output_to_disk():
     for name in ('web', 'model'):
         subprocess.call((
             'rsync', '-a',
-            os.path.join(deployment_dir, name) + '/',
+            os.path.join(DEPLOYMENT_DIR, name) + '/',
             os.path.join(ROOT_DIR, name) + '/',
         ))
 
@@ -132,140 +158,33 @@ def ensure_mono():
         subprocess.call(('rm', ROOT_DIR + 'mono.tar.gz'))
 
 
-def run_mxbuild(project_dir, runtime_version):
-    before = time.time()
-    body = {
-        'target': 'Deploy',
-        'projectFilePath': os.path.join(
-            os.getcwd(), get_mpr_file(project_dir)
-        ),
-        'forceFullDeployment': False
-    }
-    headers = {
-        'Content-Type': 'application/json',
-    }
-
-    body = json.dumps(body)
-    req = urllib2.Request(
-        url='http://localhost:6666/build',
-        data=body,
-        headers=headers,
-    )
-    print body
-    try:
-        response = urllib2.urlopen(req, timeout=120)
-    except Exception as e:
-        print e.read()
-        print e.code
-        raise
-    response = response.read()
-    print response
-    print 'MxBuild compilation succeeded'
-    print 'MxBuild took', time.time() - before, 'seconds'
-    return response
-
-
-def build(mpk_file, ticker):
-    subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', tmp_project_dir))
-    print 'rsync to intermediate'
+def build():
+    logger.debug('unzipping ' + MPK_FILE + ' to ' + TMP_PROJECT_DIR)
+    subprocess.check_call(('unzip', '-oqq', MPK_FILE, '-d', TMP_PROJECT_DIR))
+    logger.debug('rsync to intermediate')
     subprocess.call((
         'rsync', '--recursive', '--checksum', '-v',
-        tmp_project_dir + '/',
-        tmp2_project_dir + '/',
+        TMP_PROJECT_DIR + '/',
+        TMP2_PROJECT_DIR + '/',
     ))
-    print 'rsync --update'
     subprocess.call((
         'rsync', '--recursive', '--update', '-v',
-        tmp2_project_dir + '/',
-        project_dir + '/',
+        TMP2_PROJECT_DIR + '/',
+        PROJECT_DIR + '/',
     ))
-    print 'unzip', ticker.next()
-    response = run_mxbuild(project_dir, runtime_version)
-    print 'mxbuild', ticker.next()
+    runtime_version = detect_runtime_version()
+    response = run_mxbuild(runtime_version)
     copy_build_output_to_disk()
-    print 'apply new changes', ticker.next()
     return response
 
 
-def reload_model():
-    PASSWORD = os.environ.get('ADMIN_PASSWORD')
-    headers = {
-        'Content-Type': 'application/json',
-        'X-M2EE-Authentication': b64encode(PASSWORD),
-        'Authorization': 'Basic ' + b64encode('MxAdmin:' + PASSWORD),
-    }
-
-    body = {"action": "reload_model"}
-    body = json.dumps(body)
-    req = urllib2.Request(
-        url='http://localhost:' + str(get_admin_port()) + '/',
-        data=body,
-        headers=headers,
-    )
-    response = urllib2.urlopen(req, timeout=5)
-    response_headers = response.info()
-    parsed_response = json.load(response)
-    if response.getcode() != 200:
-        raise Exception('http error' + str(response.getcode()))
-    print 'RELOADED MODEL GREAT SUCCESS!!'
-
-
-def ticker():
-    prev = time.time()
-    while True:
-        last = time.time()
-        yield last - prev
-        prev = last
-
-
-def start_mxbuild_server():
-    env = dict(os.environ)
-    env['LD_LIBRARY_PATH'] = os.path.join('lib', 'mono-lib')
-    subprocess.check_call([
-        'sed',
-        '-i',
-        's|/app/vendor/mono/lib/libgdiplus.so|%s|g' % os.path.join(
-            'lib', 'mono-lib', 'libgdiplus.so'
-        ),
-        os.path.join('mono', 'etc', 'mono', 'config'),
-    ])
-    subprocess.check_call([
-        'sed',
-        '-i',
-        's|/usr/lib/libMonoPosixHelper.so|%s|g' % os.path.join(
-            'lib', 'mono-lib', 'libMonoPosixHelper.so'
-        ),
-        os.path.join('mono', 'etc', 'mono', 'config'),
-    ])
-    java_locations = [
-        '/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
-        '/tmp/javasdk/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
-    ]
-    java_location = None
-    for possible_java_location in java_locations:
-        if os.path.isdir(possible_java_location):
-            java_location = possible_java_location
-    if java_location is None:
-        raise Exception('Java not found!')
-    opts = [
-        'mono/bin/mono',
-        '--config', 'mono/etc/mono/config',
-        'mxbuild/%s/modeler/mxbuild.exe' % runtime_version,
-        '--serve',
-        '--port=6666',
-        '--java-home=%s' % java_location,
-        '--java-exe-path=%s/bin/java' % java_location,
-    ]
-    for opt in opts:
-        print opt
-    subprocess.Popen(opts, env=env)
-
-
-def do_run(port, restart_callback):
+def do_run(port, restart_callback, reload_callback):
     ensure_mono()
+    runtime_version = detect_runtime_version()
     ensure_mxbuild_version(runtime_version)
     print('Going to listen on port ', port)
-    server = HTTPServer(('', port), StoreHandler)
+    server = HTTPServer(('', port), MPKUploadHandler)
     server.mxbuild_restart_callback = restart_callback
-    start_mxbuild_server()
+    server.mxbuild_reload_callback = reload_callback
+    mxbuild.start_mxbuild_server()
     server.serve_forever()

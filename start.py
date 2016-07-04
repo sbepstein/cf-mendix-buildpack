@@ -7,32 +7,17 @@ import subprocess
 import time
 import sys
 import base64
-import threading
 sys.path.insert(0, 'lib')
 import requests
 import buildpackutil
+import instadeploy
 from m2ee import M2EE, logger
 from nginx import get_path_config, gen_htpasswd
-import instadeploy
 
 logger.setLevel(buildpackutil.get_buildpack_loglevel())
 
 logger.info('Started Mendix Cloud Foundry Buildpack')
 
-class InstaDeployThread(threading.Thread):
-
-    def __init__(self, restart_callback):
-        threading.Thread.__init__(self)
-        self.keep_running = True
-        self.daemon = True
-        self.restart_callback = restart_callback
-
-    def run(self):
-        while self.keep_running:
-            instadeploy.do_run(get_deploy_port(), restart_callback)
-
-    def stop(self):
-        self.keep_running = False
 
 def get_nginx_port():
     return int(os.environ['PORT'])
@@ -483,8 +468,11 @@ def activate_new_relic(m2ee, app_name):
     )
 
 
-def set_up_m2ee_client(vcap_data):
-    m2ee = M2EE(yamlfiles=['.local/m2ee.yaml'], load_default_files=False)
+def set_up_m2ee_client(vcap_data, old_client=None):
+    if old_client:
+        m2ee = old_client
+    else:
+        m2ee = M2EE(yamlfiles=['.local/m2ee.yaml'], load_default_files=False)
     version = m2ee.config.get_runtime_version()
 
     mendix_runtimes_path = '/usr/local/share/mendix-runtimes.git'
@@ -727,8 +715,9 @@ def am_i_primary_instance():
 def start_mxbuild_service(restart_callback):
     if os.getenv('DEPLOY_PASSWORD') is not None:
         logger.info('MxBuild service is enabled')
-        t = InstaDeployThread(restart_callback)
-        t.start()
+        instadeploy.InstaDeployThread(
+            get_deploy_port(), restart_callback
+        ).start()
 
 
 if __name__ == '__main__':
@@ -751,11 +740,18 @@ if __name__ == '__main__':
 
     service_backups()
     set_up_nginx_files()
+
     def restart_callback():
         if not m2ee.stop():
             m2ee.terminate()
         start_app(m2ee)
-    start_mxbuild_service(restart_callback)
+        configure_logging(m2ee)
+
+    def reload_callback():
+        m2ee.client.request('reload_model')
+
+    start_mxbuild_service(restart_callback, reload_callback)
+
     start_app(m2ee)
     create_admin_user(m2ee)
     configure_logging(m2ee)
