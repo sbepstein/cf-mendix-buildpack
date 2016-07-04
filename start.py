@@ -762,4 +762,5 @@ if __name__ == '__main__':
             m2ee.terminate()
         start_app(m2ee)
     start_mxbuild_service(restart_callback)
+    # TODO: while restart_callback is executing in a separate thread, the loop below might stop the main process because it sees the runtime is in fact stopped
     loop_until_process_dies(m2ee)
