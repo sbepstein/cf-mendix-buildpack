@@ -138,7 +138,6 @@ def run_mxbuild(project_dir, runtime_version):
         'projectFilePath': os.path.join(
             os.getcwd(), get_mpr_file(project_dir)
         ),
-        'useLooseVersionCheck': True,
         'forceFullDeployment': False
     }
     headers = {
@@ -168,7 +167,7 @@ def run_mxbuild(project_dir, runtime_version):
 def build(mpk_file, ticker):
     subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', tmp_project_dir))
     subprocess.call((
-        'rsync', '-a', '-c', '-v',
+        'rsync', '-r', '-c', '-v',
         tmp_project_dir + '/',
         project_dir + '/',
     ))
