@@ -104,8 +104,12 @@ def ensure_mxbuild_version(version):
 
 def apply_changes():
     for name in ('web', 'model'):
-        subprocess.call(('cp -r ' + os.path.join(deployment_dir, name, "*") + ' ' + os.path.join(ROOT_DIR, name)), shell=True)
-        subprocess.call(('rm -R ' + os.path.join(deployment_dir, name, "*")), shell=True)
+        subprocess.call((
+            'rsync', '-a', '-c',
+            os.path.join(deployment_dir, name) + '/',
+            os.path.join(ROOT_DIR, name) + '/',
+        ))
+        subprocess.call(('rm', '-rf', os.path.join(deployment_dir, name)))
 
 
 def ensure_mono():
