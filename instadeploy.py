@@ -70,10 +70,10 @@ class StoreHandler(BaseHTTPRequestHandler):
 
     def _terminate(self, status_code, data, mxbuild_response=None):
         if mxbuild_response:
-            mxbuild_json = json.loads(mxbuild_response.read())
+            mxbuild_json = json.loads(mxbuild_response)
             data['buildstatus'] = json.dumps(mxbuild_json['problems'])
         self.send_response(status_code)
-        self.send_header('Content-type','application/json')
+        self.send_header('Content-type', 'application/json')
         self.end_headers()
         data['code'] = status_code
         self.wfile.write(json.dumps(data))
@@ -102,7 +102,7 @@ def ensure_mxbuild_version(version):
         subprocess.call(('rm', MXBUILD_FOLDER + version + '.tar.gz'))
 
 
-def apply_changes():
+def copy_build_output_to_disk():
     for name in ('web', 'model'):
         subprocess.call((
             'rsync', '-a', '-c',
@@ -158,6 +158,8 @@ def run_mxbuild(project_dir, runtime_version):
         print e.read()
         print e.code
         raise
+    response = response.read()
+    print response
     print 'MxBuild compilation succeeded'
     print 'MxBuild took', time.time() - before, 'seconds'
     return response
@@ -166,10 +168,9 @@ def run_mxbuild(project_dir, runtime_version):
 def build(mpk_file, ticker):
     subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', project_dir))
     print 'unzip', ticker.next()
-    print 'runtime_version', ticker.next()
     response = run_mxbuild(project_dir, runtime_version)
     print 'mxbuild', ticker.next()
-    apply_changes()
+    copy_build_output_to_disk()
     print 'apply new changes', ticker.next()
     return response
 
