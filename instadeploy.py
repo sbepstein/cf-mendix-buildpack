@@ -145,9 +145,10 @@ def run_mxbuild(project_dir, runtime_version):
         data=body,
         headers=headers,
     )
+    print body
     try:
         response = urllib2.urlopen(req, timeout=120)
-    except urllib2.HTTPError as e:
+    except Exception as e:
         print e.read()
         print e.code
         raise
