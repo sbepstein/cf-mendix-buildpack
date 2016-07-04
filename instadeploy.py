@@ -16,9 +16,10 @@ MXBUILD_FOLDER = ROOT_DIR + 'mxbuild/'
 
 project_dir = '.local/project'
 tmp_project_dir = '.local/tmp_project'
+tmp2_project_dir = '.local/tmp_project_2'
 deployment_dir = os.path.join(project_dir, 'deployment')
 
-for dir in (MXBUILD_FOLDER, project_dir, tmp_project_dir, deployment_dir):
+for dir in (MXBUILD_FOLDER, project_dir, tmp_project_dir, deployment_dir, tmp2_project_dir):
     subprocess.call(('mkdir', '-p', dir))
 mpk_file = os.path.join(project_dir, 'app.mpk')
 
@@ -166,17 +167,16 @@ def run_mxbuild(project_dir, runtime_version):
 
 def build(mpk_file, ticker):
     subprocess.check_call(('unzip', '-oqq', mpk_file, '-d', tmp_project_dir))
-    print 'rsync exclude java'
+    print 'rsync to intermediate'
     subprocess.call((
         'rsync', '--recursive', '--checksum', '-v',
-        '--exclude', 'javasource',
         tmp_project_dir + '/',
-        project_dir + '/',
+        tmp2_project_dir + '/',
     ))
-    print 'rsync --ignore-existing'
+    print 'rsync --update'
     subprocess.call((
-        'rsync', '--recursive', '--ignore-existing', '-v',
-        tmp_project_dir + '/',
+        'rsync', '--recursive', '--update', '-v',
+        tmp2_project_dir + '/',
         project_dir + '/',
     ))
     print 'unzip', ticker.next()
