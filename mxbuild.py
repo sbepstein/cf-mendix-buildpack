@@ -3,26 +3,49 @@ import subprocess
 import sys
 import json
 import errno
+import shutil
+import buildpackutil
 sys.path.insert(0, 'lib')
 import requests
 
-
-def _get_mono_path():
-    p = '/usr/local/share/mono-3.10.0'
-    if os.path.isdir(p):
-        return p
-    else:
-        return '/tmp/mono'
+import logging
 
 
-def _get_java_location():
-    for possible_java_location in [
+def _get_dir_or_raise(directory_list, exception_string):
+    for possible_dir in directory_list:
+        if os.path.isdir(possible_dir):
+            return possible_dir
+    raise Exception(exception_string)
+
+
+def _set_up_mono():
+    if os.path.isdir('/usr/local/share/mono-3.10.0'):
+        return
+    buildpackutil.mkdir_p('/tmp/mono')
+    buildpackutil.download_and_unpack(
+        buildpackutil.get_blobstore_url('/mx-buildpack/mono-3.10.0.tar.gz'),
+        '/tmp/',
+        CACHE_DIR,
+    )
+
+
+def _get_mono_dir():
+    return _get_dir_or_raise([
+        '/usr/local/share/mono-3.10.0',
+        '/tmp/mono',
+    ], 'Mono not found')
+
+
+def _get_mono_lib_dir():
+    return _get_dir_or_raise([
+    ], 'Mono lib dir not found')
+
+
+def _get_jdk_dir():
+    return _get_dir_or_raise([
         '/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
         '/tmp/javasdk/usr/lib/jvm/jdk-%s-oracle-x64' % '8u45',
-    ]:
-        if os.path.isdir(possible_java_location):
-            return possible_java_location
-    raise Exception('Java not found!')
+    ], 'JDK not found')
 
 
 def start_mxbuild_server(runtime_version):
@@ -45,7 +68,7 @@ def start_mxbuild_server(runtime_version):
         os.path.join('mono', 'etc', 'mono', 'config'),
     ])
 
-    java_location = _get_java_location()
+    java_location = _get_jdk_dir()
     subprocess.Popen([
         'mono/bin/mono',
         '--config', 'mono/etc/mono/config',
@@ -74,7 +97,7 @@ def run_mxbuild_job_on_server(mpr_abs_path):
     return response.json()
 
 
-def run_mx_build():
+def run_mx_build(buildpack_dir):
     env = dict(os.environ)
     env['LD_LIBRARY_PATH'] = os.path.join(BUILDPACK_DIR, 'lib', 'mono-lib')
     subprocess.check_call([
@@ -93,10 +116,6 @@ def run_mx_build():
         ),
         os.path.join(_get_mono_path(), 'etc/mono/config'),
     ])
-    java_locations = [
-        '/usr/lib/jvm/jdk-%s-oracle-x64' % _get_java_version(),
-        '/tmp/javasdk/usr/lib/jvm/jdk-%s-oracle-x64' % _get_java_version(),
-    ]
     build_errors_json = '/tmp/builderrors.json'
     try:
         os.remove(build_errors_json)
@@ -104,19 +123,14 @@ def run_mx_build():
         if e.errno != errno.ENOENT:
             raise
 
-    java_location = None
-    for possible_java_location in java_locations:
-        if os.path.isdir(possible_java_location):
-            java_location = possible_java_location
-    if java_location is None:
-        raise Exception('Java not found!')
+    jdk_location = _get_jdk_dir()
     args = [
-        get_mono_path() + '/bin/mono',
-        '--config', get_mono_path() + '/etc/mono/config',
+        _get_mono_dir() + '/bin/mono',
+        '--config', _get_mono_dir() + '/etc/mono/config',
         '/tmp/mxbuild/modeler/mxbuild.exe',
         '--target=deploy',
-        '--java-home=%s' % java_location,
-        '--java-exe-path=%s/bin/java' % java_location,
+        '--java-home=%s' % jdk_location,
+        '--java-exe-path=%s/bin/java' % jdk_location,
     ]
     if get_runtime_version() >= 6.4 or os.environ.get('FORCE_WRITE_BUILD_ERRORS'):
         args.append('--write-errors=%s' % build_errors_json)
@@ -146,3 +160,42 @@ def run_mx_build():
                 shutil.rmtree(path)
             else:
                 os.unlink(path)
+
+
+def _set_up_mx_build(mendix_version, forced_url=None):
+    buildpackutil.mkdir_p('/tmp/mxbuild')
+
+    mendix_runtimes_path = '/usr/local/share/mendix-runtimes.git'
+    url = os.environ.get('FORCED_MXBUILD_URL')
+    if url is None and os.path.isdir(mendix_runtimes_path):
+        env = dict(os.environ)
+        env['GIT_WORK_TREE'] = '/tmp/mxbuild'
+
+        # checkout the runtime version
+        process = subprocess.Popen(
+            ['git', 'checkout', str(mendix_version), '-f'],
+            cwd=mendix_runtimes_path, env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        process.communicate()
+        if process.returncode != 0:
+            process = subprocess.Popen(
+                ['git', 'fetch', '--tags',
+                 '&&', 'git', 'checkout', str(mendix_version), '-f'],
+                cwd=mendix_runtimes_path, env=env, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            process.communicate()
+            if process.returncode != 0:
+                # download the mendix runtime version from our blobstore
+                url = buildpackutil.get_blobstore_url(
+                    '/runtime/mxbuild-%s.tar.gz' % mendix_version
+                )
+                buildpackutil.download_and_unpack(url, '/tmp/mxbuild', cache_dir='/tmp/downloads')
+    elif url is None:
+        url = buildpackutil.get_blobstore_url(
+            '/runtime/mxbuild-%s.tar.gz' % mendix_version
+        )
+        buildpackutil.download_and_unpack(url, '/tmp/mxbuild', cache_dir=CACHE_DIR)
+    else:
+        buildpackutil.download_and_unpack(url, '/tmp/mxbuild', cache_dir='/tmp/downloads')
