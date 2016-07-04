@@ -55,8 +55,8 @@ class StoreHandler(BaseHTTPRequestHandler):
                 mxbuild_response = build(mpk_file, ticker())
                 if 'restartRequired' in str(mxbuild_response):
                     logger.info(str(mxbuild_response))
-                    logger.info("Restarting app")
-                    self.server.mxbuild_restart_callback()
+                    logger.info("Restarting app, skipping for now")
+#                    self.server.mxbuild_restart_callback()
                 else:
                     logger.info(str(mxbuild_response))
                     logger.info("Reloading model")
