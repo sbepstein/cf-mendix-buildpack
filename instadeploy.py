@@ -141,7 +141,7 @@ def run_mxbuild(project_dir, runtime_version):
 
     body = json.dumps(body)
     req = urllib2.Request(
-        url='http://localhost:6666/',
+        url='http://localhost:6666/build',
         data=body,
         headers=headers,
     )
