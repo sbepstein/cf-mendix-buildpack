@@ -751,16 +751,16 @@ if __name__ == '__main__':
 
     service_backups()
     set_up_nginx_files()
+    def restart_callback():
+        if not m2ee.stop():
+            m2ee.terminate()
+        start_app(m2ee)
+    start_mxbuild_service(restart_callback)
     start_app(m2ee)
     create_admin_user(m2ee)
     configure_logging(m2ee)
     display_running_version(m2ee)
     configure_debugger(m2ee)
     start_nginx()
-    def restart_callback():
-        if not m2ee.stop():
-            m2ee.terminate()
-        start_app(m2ee)
-    start_mxbuild_service(restart_callback)
     # TODO: while restart_callback is executing in a separate thread, the loop below might stop the main process because it sees the runtime is in fact stopped
     loop_until_process_dies(m2ee)
