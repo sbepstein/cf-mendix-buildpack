@@ -146,9 +146,10 @@ def run_mxbuild(project_dir, runtime_version):
         headers=headers,
     )
     try:
-        response = urllib2.urlopen(req, timeout=10)
+        response = urllib2.urlopen(req, timeout=120)
     except urllib2.HTTPError as e:
         print e.read()
+        print e.code
         raise
     print 'MxBuild compilation succeeded'
     print 'MxBuild took', time.time() - before, 'seconds'
