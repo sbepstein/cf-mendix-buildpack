@@ -716,20 +716,28 @@ def am_i_primary_instance():
 
 def set_up_fastdeploy_if_deploy_password_is_set(m2ee):
     if os.getenv('DEPLOY_PASSWORD'):
-        def reload_callback():
-            m2ee.client.request('reload_model')
+        mx_version = m2ee.config.get_runtime_version()
+        if mx_version >= 6.7 or str(mx_version) is '6-build10037':
+            def reload_callback():
+                m2ee.client.request('reload_model')
 
-        def restart_callback():
-            if not m2ee.stop():
-                m2ee.terminate()
-            set_up_logging_file()
-            start_app(m2ee)
-        fastdeploy.FastDeployThread(
-            get_deploy_port(),
-            restart_callback,
-            reload_callback,
-            m2ee.config.get_runtime_version(),
-        ).start()
+            def restart_callback():
+                if not m2ee.stop():
+                    m2ee.terminate()
+                set_up_logging_file()
+                start_app(m2ee)
+
+            fastdeploy.FastDeployThread(
+                get_deploy_port(),
+                restart_callback,
+                reload_callback,
+                mx_version,
+            ).start()
+        else:
+            logger.warning(
+                'Not setting up FastDeploy because this mendix '
+                ' runtime version %s does not support it' % mx_version
+            )
 
 
 if __name__ == '__main__':
