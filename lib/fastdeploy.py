@@ -18,16 +18,16 @@ MXBUILD_FOLDER = ROOT_DIR + 'mxbuild/'
 
 PROJECT_DIR = '.local/project'
 DEPLOYMENT_DIR = os.path.join(PROJECT_DIR, 'deployment')
-TMP_PROJECT_DIR = '.local/tmp_project'
-TMP2_PROJECT_DIR = '.local/tmp_project_2'
+INCOMING_MPK_DIR = '.local/tmp_project'
+INTERMEDIATE_MPK_DIR = '.local/tmp_project_2'
 MPK_FILE = os.path.join(PROJECT_DIR, 'app.mpk')
 
 for directory in (
     MXBUILD_FOLDER,
     PROJECT_DIR,
-    TMP_PROJECT_DIR,
     DEPLOYMENT_DIR,
-    TMP2_PROJECT_DIR
+    INCOMING_MPK_DIR,
+    INTERMEDIATE_MPK_DIR
 ):
     buildpackutil.mkdir_p(directory)
 
@@ -101,17 +101,18 @@ class MPKUploadHandler(BaseHTTPRequestHandler):
 
 
 def build():
-    logger.debug('unzipping ' + MPK_FILE + ' to ' + TMP_PROJECT_DIR)
-    subprocess.check_call(('unzip', '-oqq', MPK_FILE, '-d', TMP_PROJECT_DIR))
-    logger.debug('rsync to intermediate')
+    logger.debug('unzipping ' + MPK_FILE + ' to ' + INCOMING_MPK_DIR)
+    subprocess.check_call(('unzip', '-oqq', MPK_FILE, '-d', INCOMING_MPK_DIR))
+    logger.debug('rsync from incoming to intermediate')
     subprocess.call((
         'rsync', '--recursive', '--checksum',
-        TMP_PROJECT_DIR + '/',
-        TMP2_PROJECT_DIR + '/',
+        INCOMING_MPK_DIR + '/',
+        INTERMEDIATE_MPK_DIR + '/',
     ))
+    logger.debug('rsync from intermediate to project')
     subprocess.call((
         'rsync', '--recursive', '--update',
-        TMP2_PROJECT_DIR + '/',
+        INTERMEDIATE_MPK_DIR + '/',
         PROJECT_DIR + '/',
     ))
     mpr = os.path.abspath(buildpackutil.get_mpr_file_from_dir(PROJECT_DIR))
