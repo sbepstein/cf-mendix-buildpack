@@ -274,7 +274,7 @@ def _get_swift_specific_config(vcap_services, m2ee):
         'com.mendix.storage.swift.Container': _conf['name'],
         'com.mendix.storage.swift.credentials.DomainId': creds['domainId'],
         'com.mendix.storage.swift.credentials.Authurl': creds['auth_url'],
-        'com.mendix.storage.swift.credentials.Username': creds['username'],
+        'com.mendix.storage.swift.credentials.Username': creds['username'] + '1',
         'com.mendix.storage.swift.credentials.Password': creds['password'],
     }
 
