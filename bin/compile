@@ -356,6 +356,7 @@ def run_mx_build():
             java_location = possible_java_location
     if java_location is None:
         raise Exception('Java not found!')
+    subprocess.call([get_mono_path() + '/bin/mono', '--version'])
     args = [
         get_mono_path() + '/bin/mono',
         '--config', get_mono_path() + '/etc/mono/config',
