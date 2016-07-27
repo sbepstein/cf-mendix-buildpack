@@ -261,18 +261,18 @@ def is_source_push():
 
 
 def set_up_mono():
-    if os.path.isdir('/usr/local/share/mono-3.10.0'):
+    if os.path.isdir('/usr/local/share/mono-4.4.1.0'):
         return
     buildpackutil.mkdir_p('/tmp/mono')
     buildpackutil.download_and_unpack(
-        buildpackutil.get_blobstore_url('/mx-buildpack/mono-3.10.0.tar.gz'),
+        buildpackutil.get_blobstore_url('/mx-buildpack/mono-4.4.1.0.tar.gz'),
         '/tmp/',
         CACHE_DIR,
     )
 
 
 def get_mono_path():
-    p = '/usr/local/share/mono-3.10.0'
+    p = '/usr/local/share/mono-4.4.1.0'
     if os.path.isdir(p):
         return p
     else:
