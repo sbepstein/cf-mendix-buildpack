@@ -323,6 +323,7 @@ def set_up_mx_build():
 def run_mx_build():
     env = dict(os.environ)
     env['LD_LIBRARY_PATH'] = os.path.join(BUILDPACK_DIR, 'lib', 'mono-lib')
+    env['MONO_LOG_LEVEL'] = 'debug'
     subprocess.check_call([
         'sed',
         '-i',
@@ -356,7 +357,6 @@ def run_mx_build():
             java_location = possible_java_location
     if java_location is None:
         raise Exception('Java not found!')
-    subprocess.call([get_mono_path() + '/bin/mono', '--version'])
     args = [
         get_mono_path() + '/bin/mono',
         '--config', get_mono_path() + '/etc/mono/config',
