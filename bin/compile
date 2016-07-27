@@ -265,7 +265,7 @@ def set_up_mono():
         return
     buildpackutil.mkdir_p('/tmp/mono')
     buildpackutil.download_and_unpack(
-        buildpackutil.get_blobstore_url('/mx-buildpack/mono-4.4.1.0-build2.tar.gz'),
+        buildpackutil.get_blobstore_url('/mx-buildpack/mono-4.4.1.0-build3.tar.gz'),
         '/tmp/',
         CACHE_DIR,
     )
