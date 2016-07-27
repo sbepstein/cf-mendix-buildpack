@@ -375,6 +375,7 @@ def run_mx_build():
             'Using forced mxbuild version, the model will be converted'
         )
     args.append(get_mpr_file())
+    logging.info("Will start with LD_LIBRARY_PATH: ", env['LD_LIBRARY_PATH'])
     try:
         subprocess.check_call(args, env=env)
     except subprocess.CalledProcessError as e:
