@@ -334,7 +334,7 @@ def run_mx_build():
     subprocess.check_call([
         'sed',
         '-i',
-        's|/usr/lib/libMonoPosixHelper.so|%s|g' % os.path.join(
+        's|".*libMonoPosixHelper.so|"%s|g' % os.path.join(
             BUILDPACK_DIR, 'lib', 'mono-lib', 'libMonoPosixHelper.so'
         ),
         os.path.join(get_mono_path(), 'etc/mono/config'),
